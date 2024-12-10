@@ -2,6 +2,9 @@ import os
 import streamlit as st
 import PIL.Image
 import google.generativeai as genai
+from gtts import gTTS
+from io import BytesIO
+import base64
 
 # Configure Gemini API Key
 genai.configure(api_key=st.secrets["google"]["api_key"])  # Replace with your actual Gemini API key
@@ -38,8 +41,20 @@ if uploaded_file is not None:
         response = model.generate_content([prompt, image])
 
         if response and hasattr(response, "text"):
-            st.write(f"### Gemini AI Response in {language}:")
-            st.success(response.text)
+            st.write(f"### Drishti ज्ञान  AI Response in {language}:")
+            generated_text = response.text
+            st.success(generated_text)
+
+            # Add a speaker icon for TTS
+            st.write("#### 📢 Listen to the response:")
+            if st.button("🔊 Play Response"):
+                tts = gTTS(text=generated_text, lang='hi' if language == "Hindi" else 'mr' if language == "Marathi" else 'en')
+                audio = BytesIO()
+                tts.write_to_fp(audio)
+                audio.seek(0)
+                audio_base64 = base64.b64encode(audio.read()).decode()
+                audio_tag = f'<audio controls autoplay><source src="data:audio/mp3;base64,{audio_base64}" type="audio/mp3"></audio>'
+                st.markdown(audio_tag, unsafe_allow_html=True)
         else:
             st.error("Failed to generate a response. Please try again.")
     except Exception as e:
