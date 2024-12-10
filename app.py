@@ -2,7 +2,7 @@ import os
 import streamlit as st
 import PIL.Image
 import google.generativeai as genai
-from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
+from streamlit_webrtc import webrtc_streamer, WebRtcMode, VideoTransformerBase
 
 # Configure Gemini API Key
 genai.configure(api_key=st.secrets["google"]["api_key"])  # Replace with your actual Gemini API key
@@ -20,7 +20,9 @@ language = st.sidebar.radio("Choose Response Language:", ["English", "Hindi", "M
 
 # Webcam functionality to capture live photo
 st.write("### Capture a photo using your webcam:")
-webrtc_ctx = webrtc_streamer(key="example", video_transformer_factory=VideoTransformerBase)
+
+# Using WebRtcStreamer in streamlit_webrtc for capturing the live video
+webrtc_ctx = webrtc_streamer(key="example", mode=WebRtcMode.SENDRECV, video_transformer_factory=VideoTransformerBase)
 
 if webrtc_ctx.video_frame is not None:
     # Capture image when a frame is available from webcam
