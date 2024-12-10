@@ -2,6 +2,7 @@ import os
 import streamlit as st
 import PIL.Image
 import google.generativeai as genai
+from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
 
 # Configure Gemini API Key
 genai.configure(api_key=st.secrets["google"]["api_key"])  # Replace with your actual Gemini API key
@@ -11,25 +12,23 @@ st.set_page_config(page_title="Drishti ज्ञान Image Analyzer", layout="
 
 # Title and Description
 st.title("📷 Drishti ज्ञान (Image Analyzer)")
-st.write("Upload an image to get insights powered by ज्ञान AI.")
+st.write("Upload or click a photo to get insights powered by ज्ञान AI.")
 
 # Sidebar for language selection
 st.sidebar.title("Language Settings")
 language = st.sidebar.radio("Choose Response Language:", ["English", "Hindi", "Marathi"])
 
-# Upload Image Section
-st.write("### Upload an image to analyze:")
-uploaded_file = st.file_uploader("Choose a file", type=["jpg", "jpeg", "png"])
+# Webcam functionality to capture live photo
+st.write("### Capture a photo using your webcam:")
+webrtc_ctx = webrtc_streamer(key="example", video_transformer_factory=VideoTransformerBase)
 
-if uploaded_file is not None:
-    # Save and display the uploaded image
-    with open("uploaded_image.jpg", "wb") as f:
-        f.write(uploaded_file.getbuffer())
-    
-    image = PIL.Image.open("uploaded_image.jpg")
-    st.image(image, caption="Uploaded Image", use_column_width=True)
+if webrtc_ctx.video_frame is not None:
+    # Capture image when a frame is available from webcam
+    frame = webrtc_ctx.video_frame
+    image = PIL.Image.fromarray(frame.to_ndarray(format="bgr24"))
+    st.image(image, caption="Captured Image", use_column_width=True)
 
-    # Analyze the image using Gemini API
+    # Analyze the captured image using Gemini API
     st.write("### Analyzing the Image...")
     prompt = f"Describe the content of this image in {language.lower()}."
 
