@@ -21,13 +21,27 @@ language = st.sidebar.radio("Choose Response Language:", ["English", "Hindi", "M
 # Webcam functionality to capture live photo
 st.write("### Capture a photo using your webcam:")
 
-# Using WebRtcStreamer in streamlit_webrtc for capturing the live video
-webrtc_ctx = webrtc_streamer(key="example", mode=WebRtcMode.SENDRECV, video_transformer_factory=VideoTransformerBase)
+# Class to handle capturing the image and transforming it
+class ImageTransformer(VideoTransformerBase):
+    def __init__(self):
+        self.image = None
 
-if webrtc_ctx.video_frame is not None:
-    # Capture image when a frame is available from webcam
-    frame = webrtc_ctx.video_frame
-    image = PIL.Image.fromarray(frame.to_ndarray(format="bgr24"))
+    def transform(self, frame):
+        # Capture image when a frame is available from webcam
+        self.image = PIL.Image.fromarray(frame.to_ndarray(format="bgr24"))
+        return frame  # Just returning the frame without modification
+
+# Set the streamer to capture a single frame (image)
+webrtc_ctx = webrtc_streamer(
+    key="example",
+    mode=WebRtcMode.SENDRECV,
+    video_transformer_factory=ImageTransformer,
+    async_transform=False,
+)
+
+if webrtc_ctx.video_transformer and webrtc_ctx.video_transformer.image:
+    # Get the captured image from the transformer
+    image = webrtc_ctx.video_transformer.image
     st.image(image, caption="Captured Image", use_column_width=True)
 
     # Analyze the captured image using Gemini API
